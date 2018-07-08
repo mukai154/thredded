@@ -1,20 +1,20 @@
-<% if policy(messageboard).read? %>
-  <%= view_hooks.messageboards_index.messageboard.render self, messageboard: messageboard do %>
-    <%= link_to messageboard_topics_path(messageboard), class: 'thredded--messageboard' do %>
-      <header class="thredded--messageboard--header">
-        <h2 class="thredded--messageboard--title"><%= messageboard.name %></h2>
-        <%= render 'thredded/messageboards/messageboard_meta', messageboard: messageboard %>
-      </header>
+<%= view_hooks.messageboards_index.messageboard.render self, messageboard: messageboard do %>
+  <%= link_to messageboard.path,
+              class: ['thredded--messageboard',
+                      *('thredded--messageboard--has-unread-topics' if messageboard.has_unread_topics?)] do %>
+    <header class="thredded--messageboard--header">
+      <h2 class="thredded--messageboard--title"><%= messageboard.name %></h2>
+      <%= render 'thredded/messageboards/messageboard_meta', messageboard: messageboard %>
+    </header>
 
-      <p class="thredded--messageboard--description"><%= messageboard.description %></p>
+    <p class="thredded--messageboard--description"><%= messageboard.description %></p>
 
-      <% if messageboard.last_topic %>
-        <p class="thredded--messageboard--byline">
-          <%= t 'thredded.messageboard.last_updated_by_html',
-                time_ago: time_ago(messageboard.last_topic.last_post_at),
-                user: messageboard.last_user.thredded_display_name %>
-        </p>
-      <% end %>
+    <% if messageboard.last_topic %>
+      <p class="thredded--messageboard--byline">
+        <%= t 'thredded.messageboard.last_updated_by_html',
+              time_ago: time_ago(messageboard.last_topic.last_post_at),
+              user: messageboard.last_user.thredded_display_name %>
+      </p>
     <% end %>
   <% end %>
 <% end %>

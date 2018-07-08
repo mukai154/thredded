@@ -82,6 +82,49 @@ module Thredded
       order(topics_count: :desc)
     }
 
+    attribute :unread_topics_count, ActiveRecord::Type::Integer.new
+
+    # @param [Thredded.user_class] user
+    # @param [ActiveRecord::Relation<Thredded::Topic>] topics_scope
+    def self.with_unread_topics_counts(user:, topics_scope: Thredded::Topic.all) # rubocop:disable Metrics/MethodLength
+      messageboards = arel_table
+      self_relation = is_a?(ActiveRecord::Relation) ? self : all
+      messageboards_select_manager =
+        if self_relation == unscoped
+          messageboards
+        else
+          Thredded::ArelCompat.new_arel_select_manager(
+            Arel::Nodes::TableAlias.new(Thredded::ArelCompat.relation_to_arel(self_relation), table_name)
+          )
+        end
+      topics =
+        if topics_scope == Thredded::Topic.unscoped
+          Thredded::Topic.arel_table
+        else
+          Arel::Nodes::TableAlias.new(Thredded::ArelCompat.relation_to_arel(topics_scope), 'visible_posts')
+        end
+      read_states = UserTopicReadState.arel_table
+      unread_counts =
+        messageboards_select_manager
+          .project(
+            messageboards[:id],
+            Arel::Nodes::Count.new([topics[:id]]).as('unread_topics_count')
+          )
+          .join(topics).on(topics[:messageboard_id].eq(messageboards[:id]))
+          .outer_join(read_states).on(
+            read_states[:user_id].eq(user.id)
+              .and(read_states[:postable_id].eq(topics[:id]))
+              .and(read_states[:read_at].lt(topics[:last_post_at]))
+          )
+          .group(messageboards[:id])
+          .as('id_and_unread_topics_count')
+
+      select(
+        messageboards[Arel.star],
+        Arel::Nodes::NamedFunction.new('COALESCE', [unread_counts[:unread_topics_count], 0]).as('unread_topics_count')
+      ).joins(messageboards.outer_join(unread_counts).on(messageboards[:id].eq(unread_counts[:id])).join_sources)
+    end
+
     # Finds the messageboard by its slug or ID, or raises Thredded::Errors::MessageboardNotFound.
     # @param slug_or_id [String]
     # @return [Thredded::Messageboard]

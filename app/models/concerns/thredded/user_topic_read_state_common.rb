@@ -45,19 +45,19 @@ module Thredded
       )
         states = arel_table
         self_relation = is_a?(ActiveRecord::Relation) ? self : all
-        if self_relation == unscoped
-          states_select_manager = states
-        else
-          # Using the relation here is redundant but massively improves performance.
-          states_select_manager = Thredded::ArelCompat.new_arel_select_manager(
-            Arel::Nodes::TableAlias.new(Thredded::ArelCompat.relation_to_arel(self_relation), table_name)
-          )
-        end
+        states_select_manager =
+          if self_relation == unscoped
+            states
+          else
+            # Using the relation here is redundant but massively improves performance.
+            Thredded::ArelCompat.new_arel_select_manager(
+              Arel::Nodes::TableAlias.new(Thredded::ArelCompat.relation_to_arel(self_relation), table_name)
+            )
+          end
         read = if posts_scope == post_class.unscoped
                  post_class.arel_table
                else
-                 posts_subquery = Thredded::ArelCompat.relation_to_arel(posts_scope)
-                 Arel::Nodes::TableAlias.new(posts_subquery, 'read_posts')
+                 Arel::Nodes::TableAlias.new(Thredded::ArelCompat.relation_to_arel(posts_scope), 'read_posts')
                end
         unread_topics = topic_class.arel_table
         page_info =

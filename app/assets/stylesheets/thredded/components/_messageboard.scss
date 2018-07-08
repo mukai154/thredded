@@ -27,6 +27,10 @@
   }
 }
 
+.thredded--messageboard--has-unread-topics .thredded--messageboard--title {
+  font-weight: bold;
+}
+
 .thredded--messageboard--title {
   @extend %thredded--heading;
   display: inline-block;

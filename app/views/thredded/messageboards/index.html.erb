@@ -11,7 +11,8 @@
           <% end %>
           <div class="thredded--messageboards-group">
             <%= view_hooks.messageboards_index.group.render self, group: group do %>
-              <%= render group.messageboards %>
+              <%= render partial: 'thredded/messageboards/messageboard',
+                         collection: group.messageboards %>
             <% end %>
           </div>
         <% end %>

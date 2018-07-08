@@ -107,7 +107,7 @@ module Thredded
           initialize_fake_post_contents(topics: topics, posts: posts)
           users(count: users)
           first_messageboard
-          topics(count: topics)
+          topics(count: 100_000)
           private_topics(count: topics)
           posts(count: posts)
           private_posts(count: posts)
